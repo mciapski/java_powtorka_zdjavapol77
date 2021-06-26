@@ -70,16 +70,16 @@ public class Expense {
     // todo throwing a runtime exception here is not very useful for users of this class...
 
     if (amount.compareTo(BigDecimal.ZERO) < 0) {
-      throw new RuntimeException();
+      throw new InvalidExpenseException("Nie może być mniejsze niż zero");
     }
     if (date == null || date.isAfter(LocalDate.now())) {
-      throw new RuntimeException();
+      throw new InvalidExpenseException("Musi być obecna data");
     }
     if (location == null || location.isBlank()) {
-      throw new RuntimeException();
+      throw new InvalidExpenseException("Coś musisz podać");
     }
     if (!NumberHelper.hasTwoOrLessDecimalPlaces(amount.toPlainString())) {
-      throw new RuntimeException();
+      throw new InvalidExpenseException("Muszą być 2 miejsca po przecinku");
     }
     return new Expense(amount, date, location, category);
   }

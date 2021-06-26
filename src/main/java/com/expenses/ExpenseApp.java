@@ -1,7 +1,8 @@
 package com.expenses;
 
 import com.expenses.currency.Currency;
-import com.expenses.currency.OfflineCurrencyService;
+import com.expenses.currency.CurrencyService;
+import com.expenses.currency.OnlineCurrencyService;
 import com.expenses.io.ExpenseCsvMapper;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,15 +27,16 @@ public class ExpenseApp {
   private final PrintStream printStream = new PrintStream(System.out);
   private final ExpenseService expenseService = new ExpenseService();
   private final ExpenseCsvMapper expenseMapper = new ExpenseCsvMapper();
-  private final OfflineCurrencyService currencyService = new OfflineCurrencyService();
+  private final CurrencyService onlineCurrencyService = new OnlineCurrencyService();
 
-  public void run(String dataFilename) {
+
+  public void run(String dataFilename) throws IOException, InterruptedException {
     loadData(dataFilename);
     run();
     saveData(dataFilename);
   }
 
-  public void run() {
+  public void run() throws IOException, InterruptedException {
     printStream.println("Hello User!");
 
     boolean shutdownChosen = false;
@@ -94,8 +96,15 @@ public class ExpenseApp {
     printStream.println("Enter category (can by empty):");
     String category = scanner.nextLine();
 
-    Expense expense = Expense.from(amount, date, location, category);
+    Expense expense;
+    try {
+      expense = Expense.from(amount, date, location, category);
 
+
+    } catch (InvalidExpenseException invalidExpenseException) {
+      System.out.println(invalidExpenseException.getMessage());
+      return;
+    }
     printStream.println("Adding expense: " + expense.toString());
     expenseService.addExpense(expense);
   }
@@ -106,7 +115,7 @@ public class ExpenseApp {
     expenses.forEach(printStream::println);
   }
 
-  private void convertAmount() {
+  private void convertAmount() throws IOException, InterruptedException {
     printStream.println("Enter amount:");
     BigDecimal amount;
     String enteredAmount = scanner.nextLine();
@@ -130,7 +139,7 @@ public class ExpenseApp {
       return;
     }
 
-    BigDecimal convertedAmount = currencyService.convertToPln(amount, chosenCurrency.get());
+    BigDecimal convertedAmount = onlineCurrencyService.convertToPln(amount, chosenCurrency.get());
     printStream.println(amount + " " + enteredCode + " = "
         + convertedAmount + " " + Currency.POLISH_ZLOTY.getCurrencyCode());
   }
